@@ -11,10 +11,10 @@ import re
 from typing import List, Dict
 
 class IndianNewsExpert:
-    def __init__(self, email_to: str, email_from: str, email_password: str):
-        self.email_to = email_to
-        self.email_from = email_from
-        self.email_password = email_password
+    def __init__(self):
+        self.email_to = os.getenv('EMAIL_TO')
+        self.email_from = os.getenv('EMAIL_FROM')
+        self.email_password = os.getenv('EMAIL_PASS')
         self.news_sources = {
             'Economic Times': 'https://economictimes.indiatimes.com/',
             'The Hindu': 'https://www.thehindu.com/',
@@ -173,11 +173,7 @@ class IndianNewsExpert:
 
 def job():
     """Daily news compilation job"""
-    expert = IndianNewsExpert(
-        email_to=YOUR_EMAIL,  # Replace with your email
-        email_from=YOUR_GMAIL,  # Replace with your Gmail
-        email_password=YOUR_APP_PASSWORD  # Replace with Gmail App Password
-    )
+    expert = IndianNewsExpert() 
     
     report = expert.compile_daily_news()
     subject = f"📰 Daily India News Expert - {date.today().strftime('%d/%m/%Y')}"
