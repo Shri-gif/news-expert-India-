@@ -7,6 +7,10 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, date
 import re
 from typing import List, Dict
+from supabase import create_client
+url = os.getenv("SUPABASE_URL")
+key = os.getenv("SUPABASE_KEY")
+supabase = create_client(url, key)
 
 class IndianNewsExpert:
     def __init__(self):
