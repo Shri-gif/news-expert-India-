@@ -28,12 +28,18 @@ class IndianNewsExpert:
     def search_news(self, url: str, source_name: str) -> List[Dict]:
         """Search and extract relevant news articles"""
         news_items = []
-        try:
+        
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             }
-            response = requests.get(url, headers=headers, timeout=10)
-            soup = BeautifulSoup(response.content, 'html.parser')
+            try:
+    response = requests.get(url, headers=headers, timeout=10)
+    response.raise_for_status()
+except Exception as e:
+    print(f"Skipping {source_name}: {e}")
+    return []
+
+soup = BeautifulSoup(response.content, 'html.parser')
             
             # Source-specific parsing
             articles = self.parse_source(source_name, soup)
