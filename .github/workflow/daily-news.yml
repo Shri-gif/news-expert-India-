@@ -1,1 +1,41 @@
+name: 📰 Daily India News Expert
 
+on:
+  schedule:
+    # 5:00 AM IST = 11:30 PM UTC (GitHub time)
+    - cron: '30 23 * * *'
+  workflow_dispatch:  # Manual trigger button
+
+jobs:
+  compile-news:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Setup Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: 📦 Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r src/requirements.txt
+        
+    - name: 🔍 Compile & Send News
+      env:
+        EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      run: |
+        cd src
+        python news_expert.py
+        
+    - name: 📊 Show Success
+      if: always()
+      run: |
+        echo "✅ Daily News Expert completed!"
+        echo "📧 Check your email for news digest"
