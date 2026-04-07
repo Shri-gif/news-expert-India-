@@ -26,43 +26,38 @@ class IndianNewsExpert:
         ]
     
     def search_news(self, url: str, source_name: str) -> List[Dict]:
-        """Search and extract relevant news articles"""
-        news_items = []
-        
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-            try:
-    response = requests.get(url, headers=headers, timeout=10)
-    response.raise_for_status()
-except Exception as e:
-    print(f"Skipping {source_name}: {e}")
-    return []
+    news_items = []
 
-soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Source-specific parsing
-            articles = self.parse_source(source_name, soup)
-            
-            for article in articles[:10]:  # Limit to top 10 per source
-                title = article.get('title', '')
-                link = article.get('link', '')
-                summary = article.get('summary', '')
-                
-                # Filter by relevant topics
-                if self.is_relevant_news(title + ' ' + summary):
-                    news_items.append({
-                        'source': source_name,
-                        'title': title,
-                        'link': link,
-                        'summary': self.truncate_summary(summary, 120),
-                        'time': datetime.now().strftime('%Y-%m-%d %H:%M')
-                    })
-                    
-        except Exception as e:
-            print(f"Error fetching {source_name}: {str(e)}")
-        
-        return news_items
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        articles = self.parse_source(source_name, soup)
+
+        for article in articles[:10]:
+            title = article.get('title', '')
+            link = article.get('link', '')
+            summary = article.get('summary', '')
+
+            if self.is_relevant_news(title + ' ' + summary):
+                news_items.append({
+                    'source': source_name,
+                    'title': title,
+                    'link': link,
+                    'summary': self.truncate_summary(summary, 120),
+                    'time': datetime.now().strftime('%Y-%m-%d %H:%M')
+                })
+
+    except Exception as e:
+        print(f"Error fetching {source_name}: {str(e)}")
+
+    return news_items
     
     def parse_source(self, source_name: str, soup: BeautifulSoup) -> List[Dict]:
         """Parse different news sources"""
