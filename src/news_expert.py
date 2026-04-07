@@ -1,4 +1,4 @@
-import os  # ← यह line add की missing थी!
+import os
 import requests
 from bs4 import BeautifulSoup
 import smtplib
@@ -7,10 +7,17 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, date
 import re
 from typing import List, Dict
-from supabase import create_client
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
-supabase = create_client(url, key)
+
+# Supabase setup
+try:
+    from supabase import create_client
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    supabase = create_client(url, key)
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    print("⚠️ Supabase not available - continuing without DB")
+    SUPABASE_AVAILABLE = False
 
 class IndianNewsExpert:
     def __init__(self):
@@ -22,10 +29,6 @@ class IndianNewsExpert:
             'The Hindu': 'https://www.thehindu.com/',
             'InShorts': 'https://www.inshorts.com/'
         }
-        self.topics = [
-            'governance', 'government jobs', 'weather', 'gold price', 
-            'silver price', 'stock market', 'tax', 'budget', 'economy'
-        ]
     
     def search_news(self, url: str, source_name: str) -> List[Dict]:
         news_items = []
@@ -39,52 +42,63 @@ class IndianNewsExpert:
             articles = self.parse_source(source_name, soup)
             
             for article in articles[:10]:
-    title = article.get('title', '')
-    link = article.get('link', '')
-    summary = article.get('summary', '')
-
-    if self.is_relevant_news(title + ' ' + summary):
-        news_items.append({
-            'source': source_name,
-            'title': title,
-            'link': link,
-            'summary': self.truncate_summary(summary, 120),
-            'time': datetime.now().strftime('%Y-%m-%d %H:%M')
-        })
-
-        # ✅ Yahi hona chahiye
-        try:
-            supabase.table("news").insert({
-                "title": title,
-                "summary": summary,
-                "source": source_name,
-                "link": link
-            }).execute()
+                title = article.get('title', '').strip()
+                link = article.get('link', '').strip()
+                summary = article.get('summary', '').strip()
+                
+                # Check relevance
+                if self.is_relevant_news(title + ' ' + summary):
+                    news_item = {
+                        'source': source_name,
+                        'title': title,
+                        'link': link,
+                        'summary': self.truncate_summary(summary, 120),
+                        'time': datetime.now().strftime('%Y-%m-%d %H:%M')
+                    }
+                    news_items.append(news_item)
+                    
+                    # ✅ Supabase Save (Fixed Indentation)
+                    if SUPABASE_AVAILABLE:
+                        try:
+                            supabase.table("news").insert({
+                                "title": title[:255],  # Supabase limit
+                                "summary": summary[:500],
+                                "source": source_name,
+                                "link": link,
+                                "created_at": datetime.now().isoformat()
+                            }).execute()
+                            print(f"✅ Saved to Supabase: {title[:50]}...")
+                        except Exception as db_error:
+                            print(f"⚠️ Supabase error: {db_error}")
+                            
         except Exception as e:
-            print(f"Supabase insert error: {e}")
+            print(f"❌ Error fetching {source_name}: {str(e)}")
             
-        except Exception as e:
-            print(f"Error fetching {source_name}: {str(e)}")
         return news_items
     
     def parse_source(self, source_name: str, soup: BeautifulSoup) -> List[Dict]:
         articles = []
         if source_name == 'Economic Times':
-            article_elements = soup.find_all('h3', class_=re.compile('.*title.*')) or \
-                             soup.find_all('a', href=re.compile('/news/'))
+            article_elements = (soup.find_all('h3', class_=re.compile('.*title.*')) or 
+                              soup.find_all('a', href=re.compile('/news/')))
             for elem in article_elements:
                 title = elem.get_text(strip=True)
-                link = 'https://economictimes.indiatimes.com' + elem.get('href', '') if elem.get('href') else ''
-                articles.append({'title': title, 'link': link, 'summary': title})
+                link = ('https://economictimes.indiatimes.com' + elem.get('href', '') 
+                       if elem.get('href') else '')
+                if title:
+                    articles.append({'title': title, 'link': link, 'summary': title})
+                    
         elif source_name == 'The Hindu':
-            article_elements = soup.find_all('h2') or soup.find_all('h3')
+            article_elements = soup.find_all(['h2', 'h3'])
             for elem in article_elements:
                 title = elem.get_text(strip=True)
                 link_elem = elem.find_parent('a')
                 link = link_elem.get('href', '') if link_elem else ''
                 if link.startswith('/'):
                     link = 'https://www.thehindu.com' + link
-                articles.append({'title': title, 'link': link, 'summary': title})
+                if title:
+                    articles.append({'title': title, 'link': link, 'summary': title})
+                    
         elif source_name == 'InShorts':
             article_elements = soup.find_all('div', {'itemprop': 'itemListElement'})
             for elem in article_elements:
@@ -92,16 +106,19 @@ class IndianNewsExpert:
                 summary_elem = elem.find('div', {'itemprop': 'articleBody'})
                 title = title_elem.get_text(strip=True) if title_elem else ''
                 summary = summary_elem.get_text(strip=True) if summary_elem else ''
-                link = elem.find('a').get('href', '') if elem.find('a') else ''
-                articles.append({'title': title, 'link': link, 'summary': summary})
-        return articles
+                link_elem = elem.find('a')
+                link = link_elem.get('href', '') if link_elem else ''
+                if title:
+                    articles.append({'title': title, 'link': link, 'summary': summary})
+        
+        return articles[:15]  # Limit articles
     
     def is_relevant_news(self, text: str) -> bool:
         text_lower = text.lower()
         relevant_keywords = [
             'government', 'governance', 'jobs', 'weather', 'gold', 'silver',
             'stock', 'market', 'sensex', 'nifty', 'tax', 'income tax', 'gst',
-            'budget', 'economy', 'finance', 'rbi', 'monsoon'
+            'budget', 'economy', 'finance', 'rbi', 'monsoon', 'crude'
         ]
         return any(keyword in text_lower for keyword in relevant_keywords)
     
@@ -113,17 +130,20 @@ class IndianNewsExpert:
     def compile_daily_news(self) -> str:
         all_news = []
         print("🔍 Fetching news from sources...")
+        
         for source_name, url in self.news_sources.items():
             print(f"  📱 {source_name}...")
             news = self.search_news(url, source_name)
             all_news.extend(news)
         
         all_news.sort(key=lambda x: x['source'])
+        
         report = f"""
 📰 **DAILY INDIA NEWS EXPERT** 
 📅 {date.today().strftime('%B %d, %Y')} | ⏰ {datetime.now().strftime('%H:%M IST')}
 
 """
+        
         if not all_news:
             report += "❌ No relevant news found today.\n\n"
         else:
@@ -138,7 +158,8 @@ class IndianNewsExpert:
 📱 {item['source']} | 🕒 {item['time']}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
-        report += f"\n\n🤖 Powered by Indian News Expert | Total: {len(all_news)} stories"
+            report += f"\n\n🤖 Powered by Indian News Expert | Total: {len(all_news)} stories"
+        
         return report
     
     def send_email(self, subject: str, body: str):
@@ -155,15 +176,21 @@ class IndianNewsExpert:
             server.sendmail(self.email_from, self.email_to, msg.as_string())
             server.quit()
             print("✅ Email sent successfully!")
+            return True
         except Exception as e:
             print(f"❌ Email failed: {str(e)}")
+            return False
 
 def job():
+    print("🚀 Starting Daily India News Expert...")
     expert = IndianNewsExpert() 
     report = expert.compile_daily_news()
     subject = f"📰 Daily India News Expert - {date.today().strftime('%d/%m/%Y')}"
-    expert.send_email(subject, report)
-    print("🎉 Daily job completed!")
+    
+    if expert.send_email(subject, report):
+        print("🎉 Daily job completed successfully!")
+    else:
+        print("❌ Job failed - check email settings")
 
 if __name__ == "__main__":
-    job()  # GitHub Actions के लिए direct run
+    job()
