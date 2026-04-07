@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 import schedule
 import time
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, date
 import pandas as pd
 import re
