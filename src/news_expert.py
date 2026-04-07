@@ -39,18 +39,30 @@ class IndianNewsExpert:
             articles = self.parse_source(source_name, soup)
             
             for article in articles[:10]:
-                title = article.get('title', '')
-                link = article.get('link', '')
-                summary = article.get('summary', '')
-                
-                if self.is_relevant_news(title + ' ' + summary):
-                    news_items.append({
-                        'source': source_name,
-                        'title': title,
-                        'link': link,
-                        'summary': self.truncate_summary(summary, 120),
-                        'time': datetime.now().strftime('%Y-%m-%d %H:%M')
-                    })
+    title = article.get('title', '')
+    link = article.get('link', '')
+    summary = article.get('summary', '')
+
+    if self.is_relevant_news(title + ' ' + summary):
+        news_items.append({
+            'source': source_name,
+            'title': title,
+            'link': link,
+            'summary': self.truncate_summary(summary, 120),
+            'time': datetime.now().strftime('%Y-%m-%d %H:%M')
+        })
+
+        # ✅ Yahi hona chahiye
+        try:
+            supabase.table("news").insert({
+                "title": title,
+                "summary": summary,
+                "source": source_name,
+                "link": link
+            }).execute()
+        except Exception as e:
+            print(f"Supabase insert error: {e}")
+            
         except Exception as e:
             print(f"Error fetching {source_name}: {str(e)}")
         return news_items
