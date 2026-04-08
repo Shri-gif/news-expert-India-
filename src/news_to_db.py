@@ -20,12 +20,14 @@ for item in articles[:5]:
     title = item.get("title")
     summary = item.get("description")
     link = item.get("url")
+
     print(title, summary, link)
 
-response = supabase.table("news").insert({
-    "title": title,
-    "summary": summary,
-    "link": link,
-    "created_at": datetime.utcnow().isoformat()
-}).execute()
-print(response)
+    response = supabase.table("news").insert({
+        "title": title,
+        "summary": summary,
+        "link": link,
+        "created_at": datetime.utcnow().isoformat()
+    }).execute()
+
+    print(response)
