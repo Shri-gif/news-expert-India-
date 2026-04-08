@@ -27,7 +27,6 @@ for item in articles[:5]:
         "title": title,
         "summary": summary,
         "link": link,
-        "created_at": datetime.utcnow().isoformat()
     }).execute()
 
     print(response)
