@@ -19,11 +19,12 @@ for item in articles[:5]:
     title = item.get("title")
     summary = item.get("description")
     link = item.get("url")
+    print(title, summary, link)
 
-    supabase.table("news").insert({
-        "title": title,
-        "summary": summary,
-        "link": link
-    }).execute()
+    response = supabase.table("news").insert({
+    "title": title,
+    "summary": summary,
+    "link": link
+}).execute()
 
-print("News inserted successfully")
+print(response)
