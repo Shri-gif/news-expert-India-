@@ -3,7 +3,7 @@ name: 📰 Daily India News Expert
 on:
   schedule:
     # 5:00 AM IST = 11:30 PM UTC (GitHub time)
-    - cron: '30 22 * * *'
+    - cron: '15 4 * * *'
   workflow_dispatch:  # Manual trigger button
 
 jobs:
