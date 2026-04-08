@@ -1,6 +1,7 @@
 import requests
 from supabase import create_client
 import os
+from datetime import datetime 
 
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -21,10 +22,10 @@ for item in articles[:5]:
     link = item.get("url")
     print(title, summary, link)
 
-    response = supabase.table("news").insert({
+response = supabase.table("news").insert({
     "title": title,
     "summary": summary,
-    "link": link
+    "link": link,
+    "created_at": datetime.utcnow().isoformat()
 }).execute()
-
 print(response)
