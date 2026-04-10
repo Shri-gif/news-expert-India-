@@ -9,9 +9,8 @@ import json
 NEWS_SOURCES = [
     {
          "name": "UPSC Filtered News",
-        "url": lambda key: f"https://newsapi.org/v2/everything?q=India&domains=thehindu.com,timesofindia.indiatimes.com,economictimes.indiatimes.com&language=en&sortBy=publishedAt&pageSize=10&apiKey={key}"
-    }
-    
+         "url": lambda key: f"https://newsapi.org/v2/everything?q=India government economy policy UPSC&language=en&sortBy=publishedAt&pageSize=10&apiKey={key}"
+    }   
 ]
 
 # Environment variables
