@@ -88,7 +88,9 @@ for i, item in enumerate(all_articles[:5]):
     summary = (item.get("description") or "No description")[:500]
     link = item.get("url", "")
     published = item.get("publishedAt", "")
-    source = item.get("source", {}).get("name", "") 
+    source = item.get("source", {}).get("name") or item.get("url", "")
+    if source.startswith("http"):
+    source = source.split("/")[2]
     
     if not link:  # Skip invalid articles
         continue
