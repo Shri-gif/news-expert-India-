@@ -8,8 +8,8 @@ import json
 # Multiple news sources
 NEWS_SOURCES = [
     {
-        "name": "NewsAPI India",
-        "url": lambda key: f"https://newsapi.org/v2/top-headlines?country=in&apiKey={key}&pageSize=10"
+         "name": "UPSC Filtered News",
+        "url": lambda key: f"https://newsapi.org/v2/everything?q=India government OR economy OR policy&domains=thehindu.com,timesofindia.indiatimes.com,economictimes.indiatimes.com&language=en&sortBy=publishedAt&pageSize=10&apiKey={key}"
     },
     {
         "name": "NewsAPI US (backup)",
@@ -96,6 +96,7 @@ for i, item in enumerate(all_articles[:5]):
     summary = (item.get("description") or "No description")[:500]
     link = item.get("url", "")
     published = item.get("publishedAt", "")
+    source = item.get("source", {}).get("name", "") 
     
     if not link:  # Skip invalid articles
         continue
@@ -108,6 +109,7 @@ for i, item in enumerate(all_articles[:5]):
             "title": title,
             "summary": summary,
             "link": link,
+            "source": source, 
             "published_at": published,
             "created_at": datetime.utcnow().isoformat()
         }, on_conflict="link").execute()
