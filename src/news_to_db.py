@@ -9,16 +9,9 @@ import json
 NEWS_SOURCES = [
     {
          "name": "UPSC Filtered News",
-        "url": lambda key: f"https://newsapi.org/v2/everything?q=India OR government OR economy OR policy&domains=thehindu.com,timesofindia.indiatimes.com,economictimes.indiatimes.com&language=en&sortBy=publishedAt&pageSize=10&apiKey={key}"
-    },
-    {
-        "name": "NewsAPI US (backup)",
-        "url": lambda key: f"https://newsapi.org/v2/top-headlines?country=us&apiKey={key}&pageSize=10"
-    },
-    {
-        "name": "NewsAPI World (backup)",
-        "url": lambda key: f"https://newsapi.org/v2/top-headlines?country=us&apiKey={key}&pageSize=10"
+        "url": lambda key: f"https://newsapi.org/v2/everything?q=India&domains=thehindu.com,timesofindia.indiatimes.com,economictimes.indiatimes.com&language=en&sortBy=publishedAt&pageSize=10&apiKey={key}"
     }
+    
 ]
 
 # Environment variables
